@@ -15,7 +15,7 @@ int main() {
 	auto mClient = proc.GetRemoteModule("client.dll");
 
 	auto pGameEntitySystem = *(uintptr_t*)(mClient->GetAddr() + 0x1E149E0);
-	
+	printf("pGameEntitySystem: 0x%p\n", pGameEntitySystem);
 	auto pGameEntitySystemCloner = proc.GetClonerForAddr(pGameEntitySystem, true);
 	
 	if (!pGameEntitySystemCloner->CopyMemoryRegion()) {

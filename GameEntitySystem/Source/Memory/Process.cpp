@@ -2,6 +2,8 @@
 #include <Memory/Cloner.h>
 #include <vector>
 #include <stdexcept>
+#include <TlHelp32.h>
+#include <psapi.h>
 
 bool RemoteModule::Sync() {
 	uint8_t* _ModuleBytes = new uint8_t[m_pSize];
@@ -98,4 +100,60 @@ RemoteModule *Process::GetRemoteModule(std::string szModuleName) {
 
 Cloner* Process::GetClonerForAddr(uintptr_t pAddr, bool bIsPtr) {
 	return new Cloner(pAddr, this, bIsPtr);
+}
+
+void Process::GetProcHandle() {
+
+	::PROCESSENTRY32 entry = { };
+	entry.dwSize = sizeof(::PROCESSENTRY32);
+
+	const HANDLE snapShot = ::CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	while (::Process32Next(snapShot, &entry))
+	{
+		if (!m_szProcName.compare(entry.szExeFile))
+		{
+			pProcId = entry.th32ProcessID;
+			m_hProc = ::OpenProcess(PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_QUERY_INFORMATION, FALSE, (DWORD)pProcId);
+
+			break;
+		}
+	}
+	// FreeSchemaSystem handle
+	if (snapShot)
+		::CloseHandle(snapShot);
+
+	if (!m_hProc) {
+		printf("Couldn't find Process %s\n", m_szProcName.c_str());
+		exit(1);
+	}
+}
+
+MODULEINFO Process::GetModuleInfoEx(std::string m_Name)
+{
+
+	HMODULE m_Modules[1337];
+	DWORD m_Needed = 0x0;
+	// printf("0x%p\n", Memory::remoteHandleMap[processName]);
+	if (!K32EnumProcessModules(m_hProc, m_Modules, sizeof(m_Modules), &m_Needed)) {
+		printf("Error: 0x%x\n", GetLastError());
+		return {};
+	}
+
+	DWORD m_Count = (m_Needed / sizeof(HMODULE));
+	for (DWORD i = 0; m_Count > i; ++i)
+	{
+		char m_ModuleFileName[MAX_PATH] = { 0 };
+		if (!K32GetModuleFileNameExA(m_hProc, m_Modules[i], m_ModuleFileName, sizeof(m_ModuleFileName)))
+			continue;
+
+		if (strstr(m_ModuleFileName, ("\\" + m_Name).c_str()))
+		{
+			MODULEINFO m_ModuleInfo = { 0 };
+			if (!K32GetModuleInformation(m_hProc, m_Modules[i], &m_ModuleInfo, sizeof(MODULEINFO)))
+				return {};
+			return m_ModuleInfo;
+		}
+	}
+
+	return {};
 }
