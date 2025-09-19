@@ -3,4 +3,4 @@
 
 # Projects 
 ## Game Entity System
-Calling the "GetEntity" Function from the "GameEntitySystem" externally by cloning the right memory regions.
+Calling the "GetEntity" Function from the "GameEntitySystem" externally by cloning the right memory regions. You can read about that here: [External GameEntitySystem Functions by xsip on Unknowncheats](https://www.unknowncheats.me/forum/counter-strike-2-a/718287-external-gameentitysystem-functions.html)
