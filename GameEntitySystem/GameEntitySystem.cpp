@@ -30,6 +30,6 @@ int main() {
 	
 	auto GetEntityByIdx = reinterpret_cast<GetEntityByIdDef<uintptr_t>>(mClient->ScanMemory("4C 8D 49 10 81 FA"));
 	
-	printf("CWorld: 0x%p\n", GetEntityByIdx(pGameEntitySystem, 1));
+	printf("CWorld: 0x%p\n", GetEntityByIdx(pGameEntitySystem, 0));
 	
 }
